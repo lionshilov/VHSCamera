@@ -33,3 +33,22 @@ struct CameraPreview: UIViewRepresentable {
         
     }
 }
+
+struct ProcessedCameraPreview: View {
+    @ObservedObject var viewModel: CameraViewModel
+
+    var body: some View {
+        GeometryReader { geometry in
+            if let image = viewModel.processedFrame {
+                Image(uiImage: image)
+                    .resizable()
+                    .scaledToFill()
+                    .frame(width: geometry.size.width, height: geometry.size.height)
+                    .clipped()
+            } else {
+                Color.black
+                    .frame(width: geometry.size.width, height: geometry.size.height)
+            }
+        }
+    }
+}

@@ -10,9 +10,22 @@
 		11D926972CC3CBDF009BF6CC /* VHSCamera.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = VHSCamera.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		11D8A1A02CC3D29A00EFEC5D /* Exceptions for "VHSCamera" folder in "VHSCamera" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 11D926962CC3CBDF009BF6CC /* VHSCamera */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		11D926992CC3CBDF009BF6CC /* VHSCamera */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				11D8A1A02CC3D29A00EFEC5D /* Exceptions for "VHSCamera" folder in "VHSCamera" target */,
+			);
 			path = VHSCamera;
 			sourceTree = "<group>";
 		};
@@ -255,6 +268,7 @@
 				DEVELOPMENT_TEAM = 9RT599643X;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = VHSCamera/Info.plist;
 				INFOPLIST_KEY_CLKComplicationPrincipalClass = das;
 				INFOPLIST_KEY_LSApplicationCategoryType = "";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -286,6 +300,7 @@
 				DEVELOPMENT_TEAM = 9RT599643X;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = VHSCamera/Info.plist;
 				INFOPLIST_KEY_CLKComplicationPrincipalClass = das;
 				INFOPLIST_KEY_LSApplicationCategoryType = "";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;

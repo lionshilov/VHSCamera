@@ -12,7 +12,7 @@ struct CameraView: View {
     
     var body: some View {
         ZStack {
-            CameraPreview(session: viewModel.session)
+            ProcessedCameraPreview(viewModel: viewModel)
                 .ignoresSafeArea()
             
             VStack {
