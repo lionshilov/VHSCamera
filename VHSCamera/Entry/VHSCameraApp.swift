@@ -11,7 +11,7 @@ import SwiftUI
 struct VHSCameraApp: App {
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            CameraView()
         }
     }
 }
