@@ -9,6 +9,7 @@
 import SwiftUI
 import AVFoundation
 
+
 struct CameraPreview: UIViewRepresentable {
     class PreviewView: UIView {
         override class var layerClass: AnyClass {

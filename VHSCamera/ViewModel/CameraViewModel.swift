@@ -18,6 +18,7 @@ class CameraViewModel: NSObject, ObservableObject {
     @Published var isPhotoMode = true
     @Published var capturedImage: UIImage?
     @Published var processedFrame: UIImage?
+    @Published var selectedFilter: String = "Retro"
     
     // Приватные свойства
     private var videoDeviceInput: AVCaptureDeviceInput!
@@ -64,7 +65,7 @@ class CameraViewModel: NSObject, ObservableObject {
             return
         }
         
-        // Настройка аудио входа (если требуется запись звука)
+        // Настройка аудио входа (для записи звука)
         if let audioDevice = AVCaptureDevice.default(for: .audio) {
             do {
                 let audioDeviceInput = try AVCaptureDeviceInput(device: audioDevice)
@@ -153,8 +154,23 @@ class CameraViewModel: NSObject, ObservableObject {
                     sourcePixelBufferAttributes: sourcePixelBufferAttributes
                 )
                 
+                // Добавление аудио входа для записи звука
+                let audioSettings = [
+                    AVFormatIDKey: kAudioFormatMPEG4AAC,
+                    AVNumberOfChannelsKey: 1,
+                    AVSampleRateKey: 44100.0,
+                    AVEncoderBitRateKey: 64000
+                ] as [String : Any]
+                
+                let audioInput = AVAssetWriterInput(mediaType: .audio, outputSettings: audioSettings)
+                audioInput.expectsMediaDataInRealTime = true
+                
                 if assetWriter!.canAdd(assetWriterInput!) {
                     assetWriter!.add(assetWriterInput!)
+                }
+                
+                if assetWriter!.canAdd(audioInput) {
+                    assetWriter!.add(audioInput)
                 }
                 
                 assetWriter!.startWriting()
@@ -288,10 +304,18 @@ class CameraViewModel: NSObject, ObservableObject {
 extension CameraViewModel: AVCapturePhotoCaptureDelegate {
     func photoOutput(_ output: AVCapturePhotoOutput, didFinishProcessingPhoto photo: AVCapturePhoto, error: Error?) {
         guard let imageData = photo.fileDataRepresentation() else { return }
-        capturedImage = UIImage(data: imageData)
+        var ciImage = CIImage(data: imageData)
         
-        // Сохранение фотографии в библиотеку
-        UIImageWriteToSavedPhotosAlbum(capturedImage!, nil, nil, nil)
+        // Применяем выбранный фильтр к фото
+        ciImage = applyFilter(to: ciImage)
+        
+        // Конвертируем обратно в UIImage
+        if let ciImage = ciImage, let cgImage = context.createCGImage(ciImage, from: ciImage.extent) {
+            capturedImage = UIImage(cgImage: cgImage)
+            
+            // Сохранение фотографии в библиотеку
+            UIImageWriteToSavedPhotosAlbum(capturedImage!, nil, nil, nil)
+        }
     }
 }
 
@@ -299,15 +323,13 @@ extension CameraViewModel: AVCapturePhotoCaptureDelegate {
 extension CameraViewModel: AVCaptureVideoDataOutputSampleBufferDelegate {
     func captureOutput(_ output: AVCaptureOutput, didOutput sampleBuffer: CMSampleBuffer, from connection: AVCaptureConnection) {
         // Получение изображения из буфера
-        guard let pixelBuffer = CMSampleBufferGetImageBuffer(sampleBuffer) else { return }
-        let ciImage = CIImage(cvPixelBuffer: pixelBuffer)
+        guard let ciImage = getCIImage(from: sampleBuffer) else { return }
         
-        // Применение нового VHS-фильтра
-        let vhsFilter = VHSFilter()
-        guard let vhsImage = vhsFilter.apply(to: ciImage) else { return }
+        // Применение выбранного фильтра
+        guard let filteredImage = applyFilter(to: ciImage) else { return }
         
         // Конвертация в UIImage для отображения
-        if let cgImage = context.createCGImage(vhsImage, from: vhsImage.extent) {
+        if let cgImage = context.createCGImage(filteredImage, from: filteredImage.extent) {
             let uiImage = UIImage(cgImage: cgImage)
             
             DispatchQueue.main.async {
@@ -317,7 +339,6 @@ extension CameraViewModel: AVCaptureVideoDataOutputSampleBufferDelegate {
         
         // Запись видео с эффектом VHS (если запись активна)
         if isRecording {
-            // Настройка записи (как в предыдущем коде)
             if assetWriter?.status == .unknown {
                 if let timeStamp = CMSampleBufferGetPresentationTimeStamp(sampleBuffer) as CMTime? {
                     assetWriter?.startSession(atSourceTime: timeStamp)
@@ -325,7 +346,7 @@ extension CameraViewModel: AVCaptureVideoDataOutputSampleBufferDelegate {
                 }
             }
             
-            if let pixelBuffer = createPixelBuffer(from: vhsImage),
+            if let pixelBuffer = createPixelBuffer(from: filteredImage),
                let input = assetWriterInput,
                input.isReadyForMoreMediaData {
                 let presentationTime = CMSampleBufferGetPresentationTimeStamp(sampleBuffer)
@@ -334,4 +355,32 @@ extension CameraViewModel: AVCaptureVideoDataOutputSampleBufferDelegate {
             }
         }
     }
+    
+    // Метод для получения CIImage из CMSampleBuffer
+    private func getCIImage(from sampleBuffer: CMSampleBuffer) -> CIImage? {
+        guard let pixelBuffer = CMSampleBufferGetImageBuffer(sampleBuffer) else { return nil }
+        return CIImage(cvPixelBuffer: pixelBuffer)
+    }
+    
+    // Метод для применения выбранного фильтра
+    func applyFilter(to ciImage: CIImage?) -> CIImage? {
+        guard let ciImage = ciImage else { return nil }
+        
+        let filteredImage: CIImage?
+        switch selectedFilter {
+        case "Retro":
+            filteredImage = ciImage.applyingFilter("CIPhotoEffectTransfer")
+        case "1980s":
+            filteredImage = ciImage.applyingFilter("CIColorPosterize", parameters: ["inputLevels": 6])
+        case "Vintage":
+            filteredImage = ciImage.applyingFilter("CISepiaTone", parameters: ["inputIntensity": 1.0])
+        case "Noise":
+            filteredImage = ciImage.applyingFilter("CINoiseReduction", parameters: ["inputNoiseLevel": 0.02])
+        default:
+            filteredImage = ciImage
+        }
+        
+        return filteredImage
+    }
 }
+
